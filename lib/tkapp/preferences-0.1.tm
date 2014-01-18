@@ -1,4 +1,3 @@
-
 if 0 {
     http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
     XDG base directory specification
@@ -30,16 +29,23 @@ snit::type preferences {
         if {$options(-application) eq ""} {
             error "value for -application can't be empty"
         } else {
-            switch -- $::tcl_platform(os) {
-                Linux {
+            switch -- $::tcl_platform(platform) {
+                unix {
                     ::set dir [expr {[info exists ::env(XDG_CONFIG_HOME)] ? $::env(XDG_CONFIG_HOME) : "~/.config/"}]
                     ::set appdir [file join $dir $options(-application)]
                     file mkdir $appdir
 
                     ::set appfile [file join $appdir $options(-application).ini]
                 }
+                windows {
+                    ::set dir [expr {[info exists ::env(APPDATA)] ? $::env(APPDATA) : $::env(HOME)}]
+                    set appdir [file join $dir $options(-application)]
+                    file mkdir $appdir
+
+                    set appfile [file join $appdir $options(-application).ini]
+                }
                 default {
-                    error "$type not yet implemented for $::tcl_platform(os)"
+                    error "$type not yet implemented for $::tcl_platform(platform)"
                 }
             }
             if {[catch {install ini using ini::open $appfile}]} {

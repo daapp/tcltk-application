@@ -91,7 +91,12 @@ snit::widget tkapp {
             $hull configure -menu $appmenu
 
             bind $win <Control-q> [mymethod Quit]
+
+            set options(-menu) $appmenu
+        } else {
+            $hull configure -menu $menu
         }
+
     }
 
     method getframe {} {
