@@ -28,8 +28,9 @@ snit::widget tkapp {
     option -site
     option -statusbar -configuremethod SetStatusbar
     option -title
-    option -toolbar -configuremethod SetToolbar
     option -version
+
+    delegate option * to hull
 
     component frame -public frame
     component statusbar -public statusbar
@@ -39,9 +40,13 @@ snit::widget tkapp {
 
     variable appmenu
 
+    variable statusBarPackInfo ""
+
+
     typeconstructor {
         namespace import ::msgcat::mc
     }
+
 
     constructor args {
         $self configurelist $args
@@ -60,22 +65,29 @@ snit::widget tkapp {
         install frame using ttk::frame $win.frame
         install statusbar using widget::statusbar $win.statusbar
 
-        grid $toolbar -sticky ew
+        grid $toolbar -sticky new
         grid $frame -sticky nsew
-        grid $statusbar -sticky ew
+        grid $statusbar -sticky sew
 
         grid columnconfigure $win $frame -weight 1
         grid rowconfigure $win $frame -weight 1
+
+
+        bind $win <Control-q> [mymethod quit]
+
+        wm protocol $win WM_DELETE_WINDOW [mymethod quit]
     }
+
 
     destructor {
     }
+
 
     method MakeDefaultMenu {} {
         set appmenu [menu $win.appmenu]
 
         menu $appmenu.file -tearoff 0
-        $appmenu.file add command -label [mc "Quit"] -command [mymethod Quit] -accelerator {Ctrl+Q}
+        $appmenu.file add command -label [mc "Quit"] -command [mymethod quit] -accelerator {Ctrl+Q}
 
         menu $appmenu.help -tearoff 0
         if {$options(-manual) ne ""} {
@@ -91,8 +103,6 @@ snit::widget tkapp {
         $win.appmenu add cascade -label [mc "Help"] -menu $appmenu.help -underline 0
 
         $hull configure -menu $appmenu
-
-        bind $win <Control-q> [mymethod Quit]
 
         set options(-menu) $appmenu
     }
@@ -169,7 +179,7 @@ snit::widget tkapp {
     }
 
 
-    method Quit {} {
+    method quit {} {
         set answer [tk_messageBox -type yesno -icon question -parent $win \
                         -title [mc "Quit..."] \
                         -message [mc "Really quit?"]]
@@ -192,6 +202,17 @@ snit::widget tkapp {
 
     method getstatusbar {} {
         return $statusbar
+    }
+
+
+    method SetStatusbar {option value} {
+        set options($option) $value
+        if {[string is false -strict $value]} {
+            set statusBarPackInfo [pack info $statusbar]
+            pack forget $statusbar
+        } else {
+            pack configure $statusbar {*}$statusBarPackInfo
+        }
     }
 
 
