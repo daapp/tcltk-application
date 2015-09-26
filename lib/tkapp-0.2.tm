@@ -73,8 +73,12 @@ snit::widget tkapp {
         grid rowconfigure $win $frame -weight 1
 
 
-        bind $win <Control-q> [mymethod quit]
-
+	if {$::tcl_platform(os) eq "Darwin"} {
+	    bind . <Command-Key-q> [mymethod quit]
+	} else {
+    	    bind $win <Control-q> [mymethod quit]
+	}
+	
         wm protocol $win WM_DELETE_WINDOW [mymethod quit]
     }
 
@@ -221,7 +225,11 @@ snit::widget tkapp {
 
     proc w {name {path ""}} {
         if {$path eq ""} {
-            return $Widgets($name)
+    	    if {[info exists Widgets($name)]} {
+        	return $Widgets($name)
+    	    } else {
+    		return ""
+    	    }
         } else {
             return [set Widgets($name) $path]
         }
