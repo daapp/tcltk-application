@@ -1,5 +1,5 @@
 package require Tk
-package requrie Ttk
+package require Ttk
 package require msgcat
 
 package require snit
