@@ -74,8 +74,8 @@ snit::widget tkapp {
         grid rowconfigure $win $frame -weight 1
 
 
-	if {$::tcl_platform(os) eq "Darwin"} {
-	    bind . <Command-Key-q> [mymethod quit]
+	if {[tk windowingsystem] eq "aqua"} {
+	    proc ::tk::mac::Quit {} [mymethod quit]
 	} else {
     	    bind $win <Control-q> [mymethod quit]
 	}
