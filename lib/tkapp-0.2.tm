@@ -21,7 +21,6 @@ snit::widget tkapp {
     option -manual
     # if -defaultmenu 1, then create default menu at widget construction
     option -defaultmenu -default 1 -readonly true
-    option -menu -configuremethod SetMenu
     option -name
     option -quitcommand -default exit
     option -showconsole -default 0 -type snit::boolean -readonly true
@@ -29,16 +28,15 @@ snit::widget tkapp {
     option -statusbar -configuremethod SetStatusbar
     option -title
     option -version
+    option -aboutcommand
 
     delegate option * to hull
 
     component frame -public frame
     component statusbar -public statusbar
     component toolbar -public toolbar
-
     component prefs -public prefs
-
-    variable appmenu
+    component menu -public menu
 
     variable statusBarPackInfo ""
 
@@ -57,6 +55,7 @@ snit::widget tkapp {
             wm title $win $options(-title)
         }
 
+        install menu using menu $win.appmenu
         if {$options(-defaultmenu)} {
             $self MakeDefaultMenu
         }
@@ -88,33 +87,24 @@ snit::widget tkapp {
 
 
     method MakeDefaultMenu {} {
-        set appmenu [menu $win.appmenu]
+        menu $menu.file -tearoff 0
+        $menu.file add command -label [mc "Quit"] -command [mymethod quit] -accelerator {Ctrl+Q}
 
-        menu $appmenu.file -tearoff 0
-        $appmenu.file add command -label [mc "Quit"] -command [mymethod quit] -accelerator {Ctrl+Q}
-
-        menu $appmenu.help -tearoff 0
+        menu $menu.help -tearoff 0
         if {$options(-manual) ne ""} {
-            $appmenu.help add command -label [mc "Manual"] -command [mymethod manual]
-            $appmenu.help add separator
+            $menu.help add command -label [mc "Manual"] -command [mymethod manual]
+            $menu.help add separator
         }
         if {[string is true -strict $options(-showconsole)]} {
-            $appmenu.help add command -label [mc "Show console"] -command [mymethod showConsole]
+            $menu.help add command -label [mc "Show console"] -command [mymethod showConsole]
         }
-        $appmenu.help add command -label [mc "About"] -command [mymethod about]
+        $menu.help add command -label [mc "About"] \
+            -command [expr {$options(-aboutcommand) ne "" ? $options(-aboutcommand) : [mymethod about]}]
 
-        $win.appmenu add cascade -label [mc "File"] -menu $appmenu.file -underline 0
-        $win.appmenu add cascade -label [mc "Help"] -menu $appmenu.help -underline 0
+        $win.appmenu add cascade -label [mc "File"] -menu $menu.file -underline 0
+        $win.appmenu add cascade -label [mc "Help"] -menu $menu.help -underline 0
 
-        $hull configure -menu $appmenu
-
-        set options(-menu) $appmenu
-    }
-
-
-    method SetMenu {option value} {
-        $hull configure -menu $value
-        set options($option) $value
+        $hull configure -menu $menu
     }
 
 
@@ -206,6 +196,10 @@ snit::widget tkapp {
 
     method getstatusbar {} {
         return $statusbar
+    }
+
+    method getmenu {} {
+        return $menu
     }
 
 
